@@ -5,12 +5,13 @@ from pandas.plotting import scatter_matrix
 import numpy as np
 import matplotlib.pyplot as plt
 from zlib import crc32
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedShuffleSplit, cross_val_score
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
 
 def merge_files(filepath):
     csv_files = os.listdir(filepath)
@@ -143,18 +144,6 @@ def gen_prep_labels(df, train_set, predictor, cat_col_name=None, impute_strategy
     return df_labels, df_prepared, full_pipeline
 
 def lin_reg_train(df, df_prepared, df_labels, full_pipeline):
-    # df_labels = train_set[predictor].copy()
-    # df = train_set.drop(predictor, axis=1)
-
-    # if cat_col_name:
-    #     df_num = df.drop(cat_col_name, axis=1)
-    #     df_prepared, full_pipeline = num_cat_transform(
-    #         df,
-    #         df_num,
-    #         cat_col_name,
-    #         impute_strategy
-    #         )
-
     lin_reg = LinearRegression()
     lin_reg.fit(df_prepared, df_labels)
     predictions = lin_reg.predict(df_prepared)
@@ -168,11 +157,36 @@ def lin_reg_train(df, df_prepared, df_labels, full_pipeline):
     print("Labels: ", list(some_labels))
     print("RMSE: ", lin_rmse)
 
+def display_scores(scores):
+    print("K-fold Cross-Validation Scores")
+    print("Scores: ", scores)
+    print("Mean: ", scores.mean())
+    print("Standard Deviation: ", scores.std())
+
 def decision_tree_reg(df_prepared, df_labels):
     tree_reg = DecisionTreeRegressor()
     tree_reg.fit(df_prepared, df_labels)
 
+    scores = cross_val_score(
+        tree_reg, df_prepared, df_labels, 
+        scoring="neg_mean_squared_error", cv=10
+        )
+    tree_rmse_scores = np.sqrt(-scores)
+    print("K-fold Cross-Validation Scores")
+    display_scores(tree_rmse_scores)
+
     predictions = tree_reg.predict(df_prepared)
     tree_mse = mean_squared_error(df_labels, predictions)
     tree_rmse = np.sqrt(tree_mse)
-    print("RMSE: ", tree_rmse)
+    print("\nStandard Decision Tree Regressor\nRMSE: ", tree_rmse)
+
+def random_forest_reg(df_prepared, df_labels):
+    forest_reg = RandomForestRegressor()
+    forest_reg.fit(df_prepared, df_labels)
+
+    scores = cross_val_score(
+        forest_reg, df_prepared, df_labels,
+        scoring="neg_mean_squared_error", cv=10
+        )
+    forest_rmse_scores = np.sqrt(-scores)
+    display_scores(forest_rmse_scores)
