@@ -30,7 +30,8 @@ def main():
             "8: Fill Missing Values\n" \
             "9: Category Encoder\n" \
             "10: Standardization Test\n" \
-            "11: Linear Regression Train & Test Predict")
+            "11: Linear Regression Train & Test Predict\n" \
+            "12: Decision Tree Regressor")
         selection = int(input("Node?: "))
 
         match selection:
