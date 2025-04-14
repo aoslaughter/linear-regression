@@ -1,6 +1,6 @@
 # linear-regression
 
-# 📊 Data Preparation & Linear Regression — Hands-On ML (Chapter 2)
+# 📊 Data Preparation & Linear Regression — Hands-On ML
 
 This repository implements the end-to-end pipeline from *Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow* by Aurélien Géron. It walks through the full machine learning lifecycle using the California Housing dataset.
 
