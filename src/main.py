@@ -2,18 +2,19 @@ from lib import *
 from transformers import standardization
 from sklearn.model_selection import train_test_split
 
-crypto_path = "C:\\Users\\ao_slaughter\\Documents\\python_dir\\hands_on_ml\\e2e_mlp\\pricing_data"
-housing_path = "C:\\Users\\ao_slaughter\\Documents\\python_dir\\hands_on_ml\\e2e_mlp\\housing_data"
+housing_path = ".\\housing_data"
 
 def main():
     processing = True
-    df_housing = merge_files(housing_path)
-    df_crypto = merge_files(crypto_path)
-    df_selection = int(input("Which dataframe?\nHousing = 1\nCrypto = 2\n==> "))
-    df = df_housing if df_selection == 1 else df_crypto
-    
+    df = merge_files(housing_path)
+    df_prepared = None
+    df_labels = None
+    full_pipeline = None
+
     train_set = None
     test_set = None
+
+    standardized = False
 
     while processing:
         # df = merge_files(crypto_path)
@@ -86,12 +87,20 @@ def main():
                 standardization(df_num, "median")
 
             case 11:
-                lin_reg_train(
-                    df,
-                    train_set,
-                    "median_house_value",
-                    "ocean_proximity"
+                if not standardized:
+                    df_labels, df_prepared, full_pipeline = gen_prep_labels(
+                        df, train_set, "median_house_value", "ocean_proximity"
                     )
+                    standardized = True
+
+                lin_reg_train(df, df_prepared, df_labels, full_pipeline)
+
+            case 12:
+                if not standardized:
+                    df_labels, df_prepared, full_pipeline = gen_prep_labels(
+                        df, train_set, "median_house_value", "ocean_proximity"
+                    )
+                decision_tree_reg(df_prepared, df_labels)
 
         processing = int(input("Processing? (1 or 0) "))
 
