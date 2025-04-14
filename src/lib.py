@@ -9,6 +9,8 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.tree import DecisionTreeRegressor
 
 def merge_files(filepath):
     csv_files = os.listdir(filepath)
@@ -125,7 +127,7 @@ def cat_processing(df, cat_col_name):
     df_cat_1hot = cat_encoder.fit_transform(df_cat)
     print(df_cat_1hot)
 
-def lin_reg_train(df, train_set, predictor, cat_col_name=None, impute_strategy="median"):
+def gen_prep_labels(df, train_set, predictor, cat_col_name=None, impute_strategy="median"):
     df_labels = train_set[predictor].copy()
     df = train_set.drop(predictor, axis=1)
 
@@ -137,13 +139,40 @@ def lin_reg_train(df, train_set, predictor, cat_col_name=None, impute_strategy="
             cat_col_name,
             impute_strategy
             )
+        
+    return df_labels, df_prepared, full_pipeline
 
-        lin_reg = LinearRegression()
-        lin_reg.fit(df_prepared, df_labels)
+def lin_reg_train(df, df_prepared, df_labels, full_pipeline):
+    # df_labels = train_set[predictor].copy()
+    # df = train_set.drop(predictor, axis=1)
 
-        some_data = df.iloc[:5]
-        some_labels = df_labels.iloc[:5]
-        some_data_prepared = full_pipeline.transform(some_data)
-        print("Predictions: ", lin_reg.predict(some_data_prepared))
-        print("Labels: ", list(some_labels))
-    
+    # if cat_col_name:
+    #     df_num = df.drop(cat_col_name, axis=1)
+    #     df_prepared, full_pipeline = num_cat_transform(
+    #         df,
+    #         df_num,
+    #         cat_col_name,
+    #         impute_strategy
+    #         )
+
+    lin_reg = LinearRegression()
+    lin_reg.fit(df_prepared, df_labels)
+    predictions = lin_reg.predict(df_prepared)
+    lin_mse = mean_squared_error(df_labels, predictions)
+    lin_rmse = np.sqrt(lin_mse)
+
+    some_data = df.iloc[:5]
+    some_labels = df_labels.iloc[:5]
+    some_data_prepared = full_pipeline.transform(some_data)
+    print("Predictions: ", lin_reg.predict(some_data_prepared))
+    print("Labels: ", list(some_labels))
+    print("RMSE: ", lin_rmse)
+
+def decision_tree_reg(df_prepared, df_labels):
+    tree_reg = DecisionTreeRegressor()
+    tree_reg.fit(df_prepared, df_labels)
+
+    predictions = tree_reg.predict(df_prepared)
+    tree_mse = mean_squared_error(df_labels, predictions)
+    tree_rmse = np.sqrt(tree_mse)
+    print("RMSE: ", tree_rmse)
